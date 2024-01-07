@@ -12,11 +12,20 @@ var db *sql.DB
 
 // init 初期化関数でデータベースに接続
 func initDB() {
-	dbUser := os.Getenv("DB_USER")
-	dbName := os.Getenv("DB_NAME")
-	dbPassword := os.Getenv("DB_PASSWORD")
+	env := os.Getenv("APP_ENV")
 
-	connStr := "user=" + dbUser + " dbname=" + dbName + " password=" + dbPassword + " sslmode=disable"
+	var connStr string
+	if env == "production" {
+		// Heroku PostgresのDATABASE_URL環境変数を取得
+		connStr = os.Getenv("DATABASE_URL")
+	} else {
+		dbUser := os.Getenv("DB_USER")
+		dbName := os.Getenv("DB_NAME")
+		dbPassword := os.Getenv("DB_PASSWORD")
+	
+		connStr = fmt.Sprintf("user=%s dbname=%s password=%s sslmode=disable", dbUser, dbName, dbPassword)
+	}
+
 	var err error
 	db, err = sql.Open("postgres", connStr)
 	if err != nil {
@@ -28,4 +37,6 @@ func initDB() {
 	if err != nil {
 		panic(err)
 	}
+
+	fmt.Printf("Connected to the %s database\n", env)
 }
